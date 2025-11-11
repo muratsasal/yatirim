@@ -4,7 +4,7 @@ from yatirim.core.indicators import rsi
 from yatirim.notify.telegram import gonder
 from yatirim.core.log import kayit_var_mi, kayit_ekle
 
-ZAMAN_KATSAYILARI = {"1mo":40,"1wk":25,"1d":15,"4h":10}
+ZAMAN_KATSAYILARI = {"1mo":25,"1wk":15,"1d":10,"4h":5}
 
 def sma_katkisi(sma):
     if sma < 38: return 25
@@ -14,12 +14,21 @@ def sma_katkisi(sma):
 
 def puan_hesapla(rsi31, sma31, interval):
     baz = 0
-    if sma31 < 38 and rsi31 > 38: baz = 100  # dip kırılım
-    elif rsi31 > 44 and sma31 < 44: baz = 80
-    elif rsi31 > 44 and sma31 < 51: baz = 60
+    if sma31 < 38 and rsi31 > 38: baz = 90          # dip kırılım
+    elif rsi31 > 44 and sma31 < 44: baz = 70
+    elif rsi31 > 44 and sma31 < 51: baz = 55
     elif 51 <= rsi31 <= 55: baz = 40
     elif rsi31 > 55: baz = 20
-    return min(100, baz + sma_katkisi(sma31) + ZAMAN_KATSAYILARI.get(interval,0))
+
+    puan = baz + sma_katkisi(sma31)*0.5 + ZAMAN_KATSAYILARI.get(interval,0)
+    return min(100, int(puan))
+
+def yorum_etiketi(puan):
+    if puan >= 95: return "💎 Dip Bölgesi – Güçlü Alım"
+    if puan >= 80: return "💪 Güçlü Alım Bölgesi"
+    if puan >= 65: return "🟢 Orta Seviye Alım"
+    if puan >= 50: return "🟡 İzleme Bölgesi"
+    return "🔸 Zayıf veya Gecikmiş Sinyal"
 
 def sinyal_cubuk(puan):
     dolu, bos = int(puan/10), 10 - int(puan/10)
@@ -44,12 +53,13 @@ def tarama(semboller, interval="1d", liste_adi="BIST"):
                 if kayit_var_mi(s, bugun): continue
                 sma_son=df["SMA31"].iloc[-1]
                 puan=puan_hesapla(mor_son,sma_son,interval)
+                yorum=yorum_etiketi(puan)
                 bar=sinyal_cubuk(puan)
                 link=f"https://www.tradingview.com/chart/?symbol={s.replace('.IS','')}"
                 ts=datetime.now().strftime("%d.%m.%Y %H:%M")
                 tip="Dip Sinyali (RSI31 38 Yukarı Kırılımı)" if (mor_once<38 and mor_son>38) else "RSI31 44 Yukarı Kırılımı"
                 mesaj=(f"📊 *{tip}* [{liste_adi}]\nSembol: ${s.replace('.IS','')}\nZaman Dilimi: {interval}\n"
-                       f"RSI: {mor_son:.2f}\nSMA31: {sma_son:.2f}\nSinyal Gücü: {puan}/100\n"
+                       f"RSI: {mor_son:.2f}\nSMA31: {sma_son:.2f}\nSinyal Gücü: {puan}/100\n{yorum}\n"
                        f"{bar}\n🕒 {ts}\n📈 [Grafiği Aç]({link})")
                 gonder(mesaj)
                 kayit_ekle(s, bugun)
@@ -61,7 +71,7 @@ def tarama(semboller, interval="1d", liste_adi="BIST"):
 
 if __name__=="__main__":
     from yatirim.notify.telegram import gonder
-    gonder("🧪 Test: GitHub Actions bağlantısı aktif, RSI v2 tarama başlatıldı.")
+    gonder("🧪 Test: GitHub Actions bağlantısı aktif, RSI v2.1 tarama başlatıldı.")
 
     bist_list = sembol_listesi_yukle("yatirim/universes/bist.txt")
     ndx_list = sembol_listesi_yukle("yatirim/universes/ndx.txt")
