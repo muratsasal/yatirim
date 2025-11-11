@@ -14,13 +14,15 @@ def sma_katkisi(sma):
 
 def puan_hesapla(rsi31, sma31, interval):
     baz = 0
-    if sma31 < 38 and rsi31 > 38: baz = 90          # dip kırılım
+    if sma31 < 38 and rsi31 > 38: baz = 90
     elif rsi31 > 44 and sma31 < 44: baz = 70
     elif rsi31 > 44 and sma31 < 51: baz = 55
     elif 51 <= rsi31 <= 55: baz = 40
     elif rsi31 > 55: baz = 20
 
     puan = baz + sma_katkisi(sma31)*0.5 + ZAMAN_KATSAYILARI.get(interval,0)
+    # Aylık güçlü kırılım bonusu
+    if interval == "1mo" and rsi31 > 44: puan += 20
     return min(100, int(puan))
 
 def yorum_etiketi(puan):
@@ -50,7 +52,7 @@ def tarama(semboller, interval="1d", liste_adi="BIST"):
             df["SMA31"]=df["RSI31"].rolling(window=31).mean()
             mor_once, mor_son=df["RSI31"].iloc[-2], df["RSI31"].iloc[-1]
             if (mor_once<38 and mor_son>38) or (mor_once<44 and mor_son>44):
-                if kayit_var_mi(s, bugun): continue
+                if kayit_var_mi(f"{s}_{interval}", bugun): continue
                 sma_son=df["SMA31"].iloc[-1]
                 puan=puan_hesapla(mor_son,sma_son,interval)
                 yorum=yorum_etiketi(puan)
@@ -58,23 +60,27 @@ def tarama(semboller, interval="1d", liste_adi="BIST"):
                 link=f"https://www.tradingview.com/chart/?symbol={s.replace('.IS','')}"
                 ts=datetime.now().strftime("%d.%m.%Y %H:%M")
                 tip="Dip Sinyali (RSI31 38 Yukarı Kırılımı)" if (mor_once<38 and mor_son>38) else "RSI31 44 Yukarı Kırılımı"
-                mesaj=(f"📊 *{tip}* [{liste_adi}]\nSembol: ${s.replace('.IS','')}\nZaman Dilimi: {interval}\n"
-                       f"RSI: {mor_son:.2f}\nSMA31: {sma_son:.2f}\nSinyal Gücü: {puan}/100\n{yorum}\n"
-                       f"{bar}\n🕒 {ts}\n📈 [Grafiği Aç]({link})")
+                mesaj=(f"📊 *{tip}* [{liste_adi} – {interval.upper()}]\n"
+                       f"Sembol: ${s.replace('.IS','')}\n"
+                       f"RSI: {mor_son:.2f}\nSMA31: {sma_son:.2f}\n"
+                       f"Sinyal Gücü: {puan}/100\n{yorum}\n{bar}\n🕒 {ts}\n"
+                       f"[📈 Grafiği Aç]({link})")
                 gonder(mesaj)
-                kayit_ekle(s, bugun)
+                kayit_ekle(f"{s}_{interval}", bugun)
                 bulunan.append(s)
         except Exception:
             continue
     if not bulunan:
-        gonder(f"🧾 Test: Bugün {liste_adi} listesinde kırılım bulunamadı. ({bugun})")
+        gonder(f"🧾 Test: Bugün {liste_adi} [{interval.upper()}] zaman diliminde kırılım bulunamadı. ({bugun})")
 
 if __name__=="__main__":
     from yatirim.notify.telegram import gonder
-    gonder("🧪 Test: GitHub Actions bağlantısı aktif, RSI v2.1 tarama başlatıldı.")
+    gonder("🧪 Test: RSI v3 çoklu zaman tarama başlatıldı.")
 
     bist_list = sembol_listesi_yukle("yatirim/universes/bist.txt")
     ndx_list = sembol_listesi_yukle("yatirim/universes/ndx.txt")
 
-    tarama(bist_list, "1d", "BIST")
-    tarama(ndx_list, "1d", "NDX")
+    # Her zaman dilimi için ayrı tarama
+    for interval in ["1mo","1wk","1d","4h"]:
+        tarama(bist_list, interval, "BIST")
+        tarama(ndx_list, interval, "NDX")
