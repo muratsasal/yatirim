@@ -1,5 +1,5 @@
 from datetime import datetime
-import yfinance as yf, pandas as pd
+import yfinance as yf, pandas as pd, os
 from yatirim.core.indicators import rsi
 from yatirim.notify.telegram import gonder
 from yatirim.core.log import kayit_var_mi, kayit_ekle
@@ -25,8 +25,14 @@ def sinyal_cubuk(puan):
     dolu, bos = int(puan/10), 10 - int(puan/10)
     return "🟩"*dolu + "⬛"*bos
 
-def tarama(semboller, interval="1d"):
+def sembol_listesi_yukle(dosya):
+    if not os.path.exists(dosya): return []
+    with open(dosya, "r", encoding="utf-8") as f:
+        return [satir.strip() for satir in f if satir.strip()]
+
+def tarama(semboller, interval="1d", liste_adi="BIST"):
     bugun = datetime.now().strftime("%Y-%m-%d")
+    bulunan = []
     for s in semboller:
         try:
             df = yf.Ticker(s).history(period="2y", interval=interval)
@@ -39,25 +45,26 @@ def tarama(semboller, interval="1d"):
                 sma_son=df["SMA31"].iloc[-1]
                 puan=puan_hesapla(mor_son,sma_son,interval)
                 bar=sinyal_cubuk(puan)
-                link=f"https://www.tradingview.com/chart/?symbol=BIST:{s.replace('.IS','')}"
+                link=f"https://www.tradingview.com/chart/?symbol={s.replace('.IS','')}"
                 ts=datetime.now().strftime("%d.%m.%Y %H:%M")
                 tip="Dip Sinyali (RSI31 38 Yukarı Kırılımı)" if (mor_once<38 and mor_son>38) else "RSI31 44 Yukarı Kırılımı"
-                mesaj=(f"📊 *{tip}*
-Sembol: ${s.replace('.IS','')}
-Zaman Dilimi: {interval}
-"
-                       f"RSI: {mor_son:.2f}
-SMA31: {sma_son:.2f}
-Sinyal Gücü: {puan}/100
-"
-                       f"{bar}
-🕒 {ts}
-📈 [Grafiği Aç]({link})")
+                mesaj=(f"📊 *{tip}* [{liste_adi}]\nSembol: ${s.replace('.IS','')}\nZaman Dilimi: {interval}\n"
+                       f"RSI: {mor_son:.2f}\nSMA31: {sma_son:.2f}\nSinyal Gücü: {puan}/100\n"
+                       f"{bar}\n🕒 {ts}\n📈 [Grafiği Aç]({link})")
                 gonder(mesaj)
                 kayit_ekle(s, bugun)
+                bulunan.append(s)
         except Exception:
             continue
+    if not bulunan:
+        gonder(f"🧾 Test: Bugün {liste_adi} listesinde kırılım bulunamadı. ({bugun})")
 
 if __name__=="__main__":
-    SEMBOLLER=["THYAO.IS","ASELS.IS","BIMAS.IS","TUPRS.IS","SISE.IS","VAKBN.IS"]
-    tarama(SEMBOLLER,"1d")
+    from yatirim.notify.telegram import gonder
+    gonder("🧪 Test: GitHub Actions bağlantısı aktif, RSI v2 tarama başlatıldı.")
+
+    bist_list = sembol_listesi_yukle("yatirim/universes/bist.txt")
+    ndx_list = sembol_listesi_yukle("yatirim/universes/ndx.txt")
+
+    tarama(bist_list, "1d", "BIST")
+    tarama(ndx_list, "1d", "NDX")
