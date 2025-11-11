@@ -1,8 +1,3 @@
-import os, requests
-TOKEN = os.getenv("TG_TOKEN")
-CHAT_ID = os.getenv("TG_CHAT_ID")
-API = f"https://api.telegram.org/bot{TOKEN}/sendMessage" if TOKEN else None
-
 import requests, os
 
 def gonder(metin, disable_preview=False):

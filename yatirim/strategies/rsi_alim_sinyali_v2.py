@@ -14,15 +14,13 @@ def sma_katkisi(sma):
 
 def puan_hesapla(rsi31, sma31, interval):
     baz = 0
-    if sma31 < 38 and rsi31 > 38: baz = 90
+    if sma31 < 38 and rsi31 > 38: baz = 90          # dip kırılım
     elif rsi31 > 44 and sma31 < 44: baz = 70
     elif rsi31 > 44 and sma31 < 51: baz = 55
     elif 51 <= rsi31 <= 55: baz = 40
     elif rsi31 > 55: baz = 20
 
     puan = baz + sma_katkisi(sma31)*0.5 + ZAMAN_KATSAYILARI.get(interval,0)
-    # Aylık güçlü kırılım bonusu
-    if interval == "1mo" and rsi31 > 44: puan += 20
     return min(100, int(puan))
 
 def yorum_etiketi(puan):
@@ -65,22 +63,22 @@ def tarama(semboller, interval="1d", liste_adi="BIST"):
                        f"RSI: {mor_son:.2f}\nSMA31: {sma_son:.2f}\n"
                        f"Sinyal Gücü: {puan}/100\n{yorum}\n{bar}\n🕒 {ts}\n"
                        f"[📈 Grafiği Aç]({link})")
-                gonder(mesaj)
+                gonder(mesaj, disable_preview=True)
                 kayit_ekle(f"{s}_{interval}", bugun)
                 bulunan.append(s)
         except Exception:
             continue
     if not bulunan:
-        gonder(f"🧾 Test: Bugün {liste_adi} [{interval.upper()}] zaman diliminde kırılım bulunamadı. ({bugun})")
+        gonder(f"🧾 Test: Bugün {liste_adi} [{interval.upper()}] zaman diliminde kırılım bulunamadı. ({bugun})", disable_preview=True)
 
 if __name__=="__main__":
     from yatirim.notify.telegram import gonder
-    gonder("🧪 Test: RSI v3 çoklu zaman tarama başlatıldı.")
+    gonder("🧪 Test: GitHub Actions bağlantısı aktif, RSI v2.1 tarama başlatıldı.", disable_preview=True)
 
     bist_list = sembol_listesi_yukle("yatirim/universes/bist.txt")
     ndx_list = sembol_listesi_yukle("yatirim/universes/ndx.txt")
 
-    # Her zaman dilimi için ayrı tarama
+    # Çoklu zaman dilimi taraması
     for interval in ["1mo","1wk","1d","4h"]:
         tarama(bist_list, interval, "BIST")
         tarama(ndx_list, interval, "NDX")
