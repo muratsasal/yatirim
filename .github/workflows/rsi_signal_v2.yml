@@ -1,4 +1,4 @@
-name: RSI Alim Sinyali v2
+name: RSI Alim Sinyali v3
 on:
   schedule:
     - cron: "20 5 * * *"
@@ -16,4 +16,4 @@ jobs:
       - env:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-        run: python -m yatirim.strategies.rsi_alim_sinyali_v2
+        run: python -m yatirim.strategies.rsi_alim_sinyali_v3
