@@ -78,7 +78,9 @@ def tarama(semboller, interval="1d", liste_adi="BIST"):
 if __name__=="__main__":
     bist_list = sembol_listesi_yukle("yatirim/universes/bist.txt")
     ndx_list = sembol_listesi_yukle("yatirim/universes/ndx.txt")
+    endeks_list = sembol_listesi_yukle("yatirim/universes/endeksler.txt")
 
     for interval in ["1mo","1wk","1d","4h"]:
         tarama(bist_list, interval, "BIST")
         tarama(ndx_list, interval, "NDX")
+        tarama(endeks_list, interval, "ENDEKS")
