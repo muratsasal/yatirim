@@ -6,7 +6,7 @@ from yatirim.notify.telegram import gonder
 from yatirim.core.log import kayit_var_mi, kayit_ekle
 
 # Zaman katsayıları
-ZAMAN_KATS = {"1mo":25,"1wk":15,"1d":10}  # 4h kaldırıldı
+ZAMAN_KATS = {"1mo":25,"1wk":15,"1d":10,"4h":5}
 
 # SMA katkı
 def sma_katkisi(sma):
@@ -32,11 +32,13 @@ def puan_hesapla(rsi31, sma31, interval):
     puan = baz + sma_katkisi(sma31)*0.5 + ZAMAN_KATS.get(interval,0)
     return min(100, int(puan))
 
+
 # Etiket
 def yorum_etiketi(puan, interval):
     if interval == "1mo": return "💎 Uzun Vade Dip – Güçlü Alım"
     if interval == "1wk": return "🟢 Orta–Uzun Vade Alım"
     if interval == "1d": return "💹 Kısa Vadeli Alım (Günlük)"
+    if interval == "4h": return "🕒 Kısa Vade İzleme"
     return "🌐 Sinyal"
 
 # Bar çizgisi
@@ -72,10 +74,10 @@ def tarama(semboller, interval="1d", liste_adi="BIST"):
             elif rsi_prev < 44 and rsi_now > 44:
                 kirilim = "RSI31 44 Yukarı Kırılımı"
 
-            if not kirilim:
+            if not kirilim: 
                 continue
 
-            # Aynı gün tekrar gönderme
+            # Günlük tekrar kontrolü
             anahtar = f"{s}_{interval}"
             if kayit_var_mi(anahtar, bugun):
                 continue
@@ -106,6 +108,8 @@ def tarama(semboller, interval="1d", liste_adi="BIST"):
         except Exception:
             pass
 
+    # Boş ise mesaj gönderme yok (sen istedin diye test mesajları kaldırıldı)
+
 
 # Çalıştırma
 if __name__ == "__main__":
@@ -113,8 +117,7 @@ if __name__ == "__main__":
     ndx = sembol_listesi_yukle("yatirim/universes/ndx.txt")
     endeks = sembol_listesi_yukle("yatirim/universes/endeks.txt")
 
-    # 4H KALDIRILDI
-    for iv in ["1mo","1wk","1d"]:
+    for iv in ["1mo","1wk","1d","4h"]:
         tarama(bist, iv, "BIST")
         tarama(ndx, iv, "NDX")
         tarama(endeks, iv, "ENDEKS")
