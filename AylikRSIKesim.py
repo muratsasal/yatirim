@@ -6,7 +6,7 @@ from datetime import datetime
 
 # Telegram Bot ayarları
 TELEGRAM_TOKEN = "8256592463:AAHlJ3BQSvwUDOQuKCYAhKwAwMMWUFJXE4o"  # Telegram Bot ayarları
-CHAT_ID = "-1003198250448"  # Günlük tarama grubu (istersen burayı 1008660822 yapıp kendine de gönderebilirsin)
+CHAT_ID = "1008660822"  # Günlük tarama grubu (istersen burayı 1008660822 yapıp kendine de gönderebilirsin)
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 
 # BIST sembol listesi (gunlukTarama / OrtaVadeTrend ile aynı)
