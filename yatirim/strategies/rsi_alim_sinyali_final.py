@@ -3,7 +3,7 @@ import yfinance as yf, os
 
 from yatirim.core.indicators import rsi_tv
 from yatirim.notify.telegram import gonder
-from yatirim.core.log import kayit_oku, kayit_yaz, kayit_sil
+from yatirim.core.log import kayit_var_mi, kayit_ekle
 
 ZAMAN_KATS = {"1mo":25,"1wk":15,"1d":10}
 
