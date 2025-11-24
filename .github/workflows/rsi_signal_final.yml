@@ -7,13 +7,19 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install yfinance pandas requests
-      - env:
+
+      - name: Install dependencies
+        run: pip install yfinance pandas requests
+
+      - name: Run RSI Alim Sinyali Final
+        env:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: python -m yatirim.strategies.rsi_alim_sinyali_final
