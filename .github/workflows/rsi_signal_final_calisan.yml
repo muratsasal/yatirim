@@ -1,4 +1,4 @@
-name: RSI Alim Sinyali Final
+name: RSI Alim Sinyali Final calisan
 on:
   schedule:
     - cron: "20 5 * * *"
